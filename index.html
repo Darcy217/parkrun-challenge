@@ -1,13 +1,3 @@
-None selected 
-
-Skip to content
-Using Gmail with screen readers
-Conversations
-77% of 15 GB used
-Terms · Privacy · Program Policies
-Last account activity: 0 minutes ago
-Open in 1 other location · Details
-tom@thenotmans.co.uk. Press tab to insert.
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,7 +22,7 @@ body{font-family:var(--sans);background:var(--bg);color:#111827;min-height:100vh
 header{background:var(--navy);color:#fff}
 .header-inner{max-width:980px;margin:0 auto;padding:20px 16px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:14px}
-.brand-icon{width:48px;height:48px;background:var(--teal);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.brand-icon{width:48px;heigAht:48px;background:var(--teal);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 .brand h1{font-family:var(--serif);font-size:20px;font-weight:400;line-height:1.25}
 .brand h1 span{color:#7dd3fc}
 .brand p{font-size:11px;color:#93c5fd;margin-top:2px}
@@ -357,10 +347,8 @@ main{max-width:980px;margin:0 auto;padding:20px 12px 80px}
     <button class="ntab" onclick="gotoTab('log')">➕ Log a Run</button>
     <button class="ntab" onclick="gotoTab('badges')">🏅 Badges</button>
     <button class="ntab" onclick="gotoTab('stats')">📈 Stats</button>
-    <button class="ntab" onclick="gotoTab('leaderboard')">🏆 User Leaderboard</button>
+    <button class="ntab" onclick="gotoTab('leaderboard')">🏆 Leaderboard</button>
     <button class="ntab" onclick="gotoTab('certificate')">🎖️ Certificate</button>
-    <button class="ntab" onclick="gotoTab('arealeaderboard')">🗺️ Area Leaderboard</button>
-    <button class="ntab" onclick="gotoTab('runleaderboard')">🏃 Parkrun Leaderboard</button>
   </div></div>
 </header>
 
@@ -488,12 +476,11 @@ main{max-width:980px;margin:0 auto;padding:20px 12px 80px}
 
 <!-- LEADERBOARD TAB -->
 <div id="tab-leaderboard" class="hidden">
-  <div class="sec-title">User Leaderboard</div>
+  <div class="sec-title">Leaderboard</div>
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
     <button class="fbtn on" id="lbf-a" onclick="setLbF('areas')">🌍 Areas</button>
     <button class="fbtn"    id="lbf-r" onclick="setLbF('runs')">🏃 Runs</button>
     <button class="fbtn"    id="lbf-b" onclick="setLbF('badges')">🏅 Badges</button>
-    <button class="fbtn"    id="lbf-c" onclick="setLbF('certs')">🎖️ Certificates</button>
     <span id="lb-ct" style="margin-left:auto;font-size:11px;color:var(--gray)"></span>
   </div>
   <div class="card"><div id="lb-list"></div></div>
@@ -534,33 +521,6 @@ main{max-width:980px;margin:0 auto;padding:20px 12px 80px}
       <button class="btn btn-primary" onclick="printCert()">🖨️ Print / Save as PDF</button>
     </div>
   </div>
-</div>
-
-
-<!-- CERTIFICATES LEADERBOARD TAB -->
-<div id="tab-certleaderboard" class="hidden">
-  <div class="sec-title">Certificates Leaderboard</div>
-  <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Ranked by total challenge certificates earned. Each user can earn one Explorer certificate and one Deep Dive certificate per area (up to 21 total).</p>
-  <div class="card">
-    <div id="cert-lb-list"></div>
-  </div>
-</div>
-
-<!-- AREA LEADERBOARD TAB -->
-<div id="tab-arealeaderboard" class="hidden">
-  <div class="sec-title">Area Leaderboard</div>
-  <p style="font-size:12px;color:var(--gray);margin-bottom:14px">All 20 water company areas ranked by total parkrun completions logged by all users combined.</p>
-  <div id="area-lb-list"></div>
-</div>
-
-<!-- PARKRUN LEADERBOARD TAB -->
-<div id="tab-runleaderboard" class="hidden">
-  <div class="sec-title">Parkrun Leaderboard</div>
-  <p style="font-size:12px;color:var(--gray);margin-bottom:10px">All 1,307 parkruns ranked by total completions logged by all users. Search to find a specific parkrun.</p>
-  <div class="search-row" style="margin-bottom:12px">
-    <input type="text" id="run-lb-search" placeholder="Search by parkrun name or location…" oninput="filterRunLeaderboard()" style="flex:1;padding:8px 11px;border-radius:9px;border:1px solid var(--border);font-size:12px;font-family:inherit;outline:none">
-  </div>
-  <div id="run-lb-list"></div>
 </div>
 
 </main>
@@ -666,32 +626,6 @@ async function fbSaveLeaderboardSnap(username, snap) {
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   } catch(e) {}
-}
-
-async function fbSaveCertificate(username, certData) {
-  // certData: { explorer: bool, deepDive: [areaIds] }
-  try {
-    await db.collection('certificates').doc(username).set(certData, { merge: true });
-  } catch(e) {}
-}
-
-async function fbGetAllCertificates() {
-  try {
-    const snap = await db.collection('certificates').get();
-    const result = {};
-    snap.forEach(doc => { result[doc.id] = doc.data(); });
-    return result;
-  } catch(e) { return null; }
-}
-
-async function fbGetAllUserData() {
-  // Fetch all userData docs to aggregate completions by area across all users
-  try {
-    const snap = await db.collection('userData').get();
-    const result = {};
-    snap.forEach(doc => { result[doc.id] = doc.data(); });
-    return result;
-  } catch(e) { return null; }
 }
 
 async function fbGetLeaderboard() {
@@ -807,7 +741,7 @@ function isChallengeDone() {
 // ============================================================
 // TABS
 // ============================================================
-const TABS = ['progress','log','badges','stats','leaderboard','certificate','arealeaderboard','runleaderboard'];
+const TABS = ['progress','log','badges','stats','leaderboard','certificate'];
 function gotoTab(tab) {
   TABS.forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
@@ -816,10 +750,8 @@ function gotoTab(tab) {
   if(tab==='log') { renderLogList(); populateQuickLog(); }
   if(tab==='badges') renderBadges();
   if(tab==='stats') renderStats();
-  if(tab==='leaderboard')      renderLeaderboard();
-  if(tab==='certificate')      renderCertificate();
-  if(tab==='arealeaderboard')  renderAreaLeaderboard();
-  if(tab==='runleaderboard')    renderRunLeaderboard();
+  if(tab==='leaderboard') renderLeaderboard();
+  if(tab==='certificate') renderCertificate();
 }
 
 // ============================================================
@@ -1274,30 +1206,7 @@ function renderCompletionBanner() {
       document.getElementById('comp-title').textContent=`${name} Deep Dive Complete!`;
       document.getElementById('comp-sub').textContent=`Every parkrun in the ${ca?.name||''} area completed!`;
     }
-    // Persist certificate to Firebase so it shows on the Certificates Leaderboard
-    if(CU) saveCertificateToFirebase();
   }
-}
-
-function saveCertificateToFirebase() {
-  if(!CU) return;
-  const certData = { name: CU.name, colour: CU.colour, type: CU.type };
-  if(challengeMode === 'explorer' && AREAS.every(a => a.runs.some(r => completions[r.id]))) {
-    certData.explorer = true;
-    certData.explorerDate = new Date().toISOString().slice(0,10);
-  }
-  if(challengeMode === 'deepdive') {
-    const completedAreas = AREAS
-      .filter(a => { const s = areaStatus(a); return s.total > 0 && s.done === s.total; })
-      .map(a => a.id);
-    if(completedAreas.length) {
-      certData.deepDive = completedAreas;
-      certData.deepDiveDate = new Date().toISOString().slice(0,10);
-    }
-  }
-  // count = 1 for explorer + number of deep-dive areas completed
-  certData.count = (certData.explorer ? 1 : 0) + (certData.deepDive ? certData.deepDive.length : 0);
-  if(certData.count > 0) fbSaveCertificate(CU.username, certData);
 }
 
 // ============================================================
@@ -1338,212 +1247,327 @@ function renderCertificate() {
 function printCert() { window.print(); }
 
 // ============================================================
-// CERTIFICATES LEADERBOARD
+// PROFILE
 // ============================================================
-function renderCertificatesInLeaderboard() {
-  // Renders certificate rankings into the shared lb-list div on the User Leaderboard tab
-  var list = document.getElementById('lb-list');
-  var ct   = document.getElementById('lb-ct');
-  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:12px">Loading…</div>';
-
-  var localCerts = buildLocalCertData();
-
-  fbGetAllCertificates().then(function(fbCerts) {
-    var merged = fbCerts || {};
-    if(CU && localCerts[CU.username]) {
-      merged[CU.username] = Object.assign({}, merged[CU.username]||{}, localCerts[CU.username]);
-    }
-    var entries = buildCertEntries(merged);
-    if(ct) ct.textContent = entries.filter(function(e){return e.count>0;}).length + ' certificate holder' + (entries.filter(function(e){return e.count>0;}).length!==1?'s':'');
-    renderCertLeaderboardEntries(entries, list);
-  }).catch(function() {
-    var entries = buildCertEntries(localCerts);
-    if(ct) ct.textContent = entries.filter(function(e){return e.count>0;}).length + ' certificate holder' + (entries.filter(function(e){return e.count>0;}).length!==1?'s':'');
-    renderCertLeaderboardEntries(entries, list);
-  });
+function openProfile() {
+  document.getElementById('prof-input-name').value = (CU && CU.name) || profile.name||'';
+  populateQuickLog();
+  document.getElementById('prof-input-area').value = profile.area||'';
+  document.getElementById('profile-modal').classList.add('open');
 }
-
-function buildLocalCertData() {
-  var result = {};
-  if(!CU) return result;
-  var count = 0;
-  if(challengeMode==='explorer' && AREAS.every(function(a){return a.runs.some(function(r){return completions[r.id];});})) count++;
-  count += AREAS.filter(function(a){var s=areaStatus(a);return s.total>0&&s.done===s.total;}).length;
-  result[CU.username] = { name:CU.name, colour:CU.colour, type:CU.type, count:count };
-  return result;
-}
-
-function buildCertEntries(certs) {
-  return Object.entries(certs).map(function(kv) {
-    var username = kv[0], d = kv[1];
-    var count = d.count !== undefined ? d.count :
-      (d.explorer ? 1 : 0) + (d.deepDive ? d.deepDive.length : 0);
-    return {
-      username, count,
-      name:   d.name   || username,
-      colour: d.colour || mkColour(d.name||username),
-      type:   d.type   || 'adult',
-      isMe:   CU && username === CU.username
-    };
-  }).filter(function(e){return e.count>0;});
-}
-
-// Keep renderCertLeaderboard as an alias for backwards compat (called nowhere now but harmless)
-function renderCertLeaderboard() {
-  var list = document.getElementById('cert-lb-list');
-  if(!list) return;
-  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:12px">Loading…</div>';
-
-  // Include current user's live certificate count
-  var localCerts = {};
-  if(CU) {
-    var count = 0;
-    if(challengeMode==='explorer' && AREAS.every(a => a.runs.some(r => completions[r.id]))) count++;
-    // Count any deep-dive completed areas
-    count += AREAS.filter(a => { var s=areaStatus(a); return s.total>0 && s.done===s.total; }).length;
-    localCerts[CU.username] = { name: CU.name, colour: CU.colour, type: CU.type, count: count };
+function closeProfileModal() { document.getElementById('profile-modal').classList.remove('open'); }
+function saveProfile() {
+  profile.name = document.getElementById('prof-input-name').value;
+  profile.area = document.getElementById('prof-input-area').value;
+  if(!profile.since) profile.since = new Date().toISOString().slice(0,10);
+  if (CU) {
+    CU.name = profile.name;
+    var a = acctGet(); if (a[CU.username]) { a[CU.username].name = profile.name; acctSave(a); }
+    refreshPill();
   }
-
-  fbGetAllCertificates().then(function(fbCerts) {
-    var merged = fbCerts || {};
-    // Override with live count for current user
-    if(CU && localCerts[CU.username]) {
-      merged[CU.username] = Object.assign(merged[CU.username]||{}, localCerts[CU.username]);
-    }
-    renderCertLeaderboardEntries(merged);
-  }).catch(function() {
-    renderCertLeaderboardEntries(localCerts);
-  });
-}
-
-function renderCertLeaderboardEntries(entries, listEl) {
-  // entries: pre-built array of {username, name, colour, type, count, isMe}
-  // listEl: optional DOM element to render into (defaults to cert-lb-list)
-  var list = listEl || document.getElementById('cert-lb-list');
-  if(!list) return;
-  list.innerHTML = '';
-
-  entries.sort(function(a,b) { return b.count - a.count || a.name.localeCompare(b.name); });
-
-  if(!entries.length) {
-    list.innerHTML = '<div class="empty"><div class="ei">🎖️</div><p>No certificates earned yet — complete the Explorer or Deep Dive challenge to appear here!</p></div>';
-    return;
-  }
-
-  entries.forEach(function(p, i) {
-    var medal   = i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-    var rankCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    var row = document.createElement('div');
-    row.className = 'lb-item' + (p.isMe?' you-row':'');
-    row.innerHTML =
-      '<div class="lb-rank '+rankCls+'">'+medal+'</div>'
-      +'<div class="lb-avatar" style="background:'+p.colour+';color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">'+p.name.charAt(0).toUpperCase()+'</div>'
-      +'<div class="lb-name">'+p.name+(p.isMe?'<span class="lb-you-tag">you</span>':'')
-      +'<span class="lb-rtype '+p.type+'">'+(p.type==='junior'?'2K Junior':'5K Adult')+'</span>'
-      +'<div class="lb-sub">@'+p.username+'</div></div>'
-      +'<div class="lb-score">'+p.count+' <span>certificate'+(p.count!==1?'s':'')+'</span></div>';
-    list.appendChild(row);
-  });
+  saveState(); closeProfileModal(); renderLeaderboard(); renderCompletionBanner();
 }
 
 // ============================================================
-// AREA LEADERBOARD
+// MODAL CLOSE ON OVERLAY
 // ============================================================
-function renderAreaLeaderboard() {
-  var container = document.getElementById('area-lb-list');
-  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:12px">Loading area totals…</div>';
+document.getElementById('log-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('profile-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeProfileModal(); });
 
-  // Start with current user's completions locally
-  var localTotals = buildAreaTotals([completions]);
+// ============================================================
+// INIT
+// ============================================================
+// Auth overlay is visible by default (no class='gone').
+// Render the app silently behind it so it's ready when the user signs in.
+renderAll();
+populateQuickLog();
 
-  fbGetAllUserData().then(function(allUserData) {
-    if(allUserData && Object.keys(allUserData).length > 0) {
-      var allCompletions = Object.values(allUserData).map(function(d) { return d.completions || {}; });
-      // Always include current user's live local completions
-      allCompletions.push(completions);
-      renderAreaLeaderboardEntries(buildAreaTotals(allCompletions));
-    } else {
-      renderAreaLeaderboardEntries(localTotals);
+// ═══════════════════════════════════════════════════════════
+// AUTH & ACCOUNT SYSTEM
+// ═══════════════════════════════════════════════════════════
+const AK  = 'wcp-accounts-v1';          // accounts store key
+const DK  = u => 'wcp-data-' + u;       // per-user data key
+const PAL = ['#1d4ed8','#0d9488','#be185d','#7c3aed','#b45309','#065f46','#0369a1','#92400e'];
+const mkColour = n => PAL[(n||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0)%PAL.length];
+
+let CU  = null;   // current user: {username,name,type,colour,since} or null
+let _rt = 'adult'; // selected runner type on register form
+
+// ── Storage ────────────────────────────────────────────────
+function acctGet() {
+  // Returns cached accounts from localStorage (fast, synchronous).
+  // Firebase is the live source — see fbGetAccounts() for async reads.
+  try { return JSON.parse(localStorage.getItem(AK)||'{}'); } catch(e) { return {}; }
+}
+function acctSave(obj) {
+  // Always update localStorage cache immediately.
+  try { localStorage.setItem(AK, JSON.stringify(obj)); } catch(e) {}
+}
+function userLoad(u) {
+  // 1. Load from localStorage immediately (fast, works offline)
+  try {
+    const d = JSON.parse(localStorage.getItem(DK(u))||'{}');
+    completions   = d.completions   || {};
+    challengeMode = d.challengeMode || 'explorer';
+    profile.area  = d.homeArea      || '';
+  } catch(e) { completions={}; challengeMode='explorer'; }
+  // 2. Then fetch from Firebase and update if newer
+  fbGetUserData(u).then(function(d) {
+    if (!d) return; // Firebase unavailable or no data yet
+    // Only overwrite if Firebase data is newer than local
+    const localTs = (() => { try { return JSON.parse(localStorage.getItem(DK(u))||'{}').ts||0; } catch(e){ return 0; }})();
+    if ((d.ts||0) >= localTs) {
+      completions   = d.completions   || completions;
+      challengeMode = d.challengeMode || challengeMode;
+      profile.area  = d.homeArea      || profile.area;
+      // Re-render with fresh data
+      document.getElementById('m-explorer').classList.toggle('sel', challengeMode==='explorer');
+      document.getElementById('m-deepdive').classList.toggle('sel', challengeMode==='deepdive');
+      renderAll();
     }
+  });
+}
+function userSave() {
+  if (!CU) { saveState(); return; }
+  const data = {
+    completions, challengeMode, homeArea: profile.area,
+    ts: Date.now()
+  };
+  // 1. Always save to localStorage (instant, works offline)
+  try { localStorage.setItem(DK(CU.username), JSON.stringify(data)); } catch(e) {}
+  // 2. Save to Firebase (async, non-blocking)
+  setSyncStatus('syncing');
+  fbSaveUserData(CU.username, data).then(function(ok) {
+    setSyncStatus(ok ? 'cloud' : 'local');
+  });
+  // 3. Update leaderboard snapshot
+  const snap = {
+    name:   CU.name,
+    colour: CU.colour,
+    type:   CU.type,
+    areas:  areasVisited(),
+    runs:   totalRuns(),
+    badges: earnedBadges()
+  };
+  // Update localStorage cache
+  const a = acctGet();
+  if (a[CU.username]) { a[CU.username].snap = { areas: snap.areas, runs: snap.runs, badges: snap.badges }; acctSave(a); }
+  // Update Firebase leaderboard
+  fbSaveLeaderboardSnap(CU.username, snap);
+}
+
+// ── Auth UI ────────────────────────────────────────────────
+function acTab(t) {
+  document.getElementById('tab-li').classList.toggle('on', t==='li');
+  document.getElementById('tab-rg').classList.toggle('on', t==='rg');
+  document.getElementById('panel-li').classList.toggle('on', t==='li');
+  document.getElementById('panel-rg').classList.toggle('on', t==='rg');
+  document.getElementById('ac-err').classList.remove('on');
+}
+function acErr(m) {
+  const e = document.getElementById('ac-err');
+  e.textContent = m;
+  e.classList.add('on');
+}
+function pickRT(t) {
+  _rt = t;
+  document.getElementById('rtA').className = 'rt-card' + (t==='adult'?' on-a':'');
+  document.getElementById('rtJ').className = 'rt-card' + (t==='junior'?' on-j':'');
+}
+function hideAuth() { document.getElementById('auth-overlay').classList.add('gone'); }
+function showAuth() {
+  document.getElementById('auth-overlay').classList.remove('gone');
+  // Hide both pill and guest button while auth screen is showing
+  const guestBtn = document.getElementById('guest-btn');
+  if (guestBtn) guestBtn.style.display = 'none';
+}
+
+// ── Login ──────────────────────────────────────────────────
+function doLogin() {
+  const u = (document.getElementById('f-li-user').value||'').trim().toLowerCase();
+  const p = document.getElementById('f-li-pass').value||'';
+  if (!u || !p) return acErr('Please enter your username and password.');
+  let h;
+  try { h = btoa(unescape(encodeURIComponent(p))); } catch(e) { return acErr('Password error.'); }
+
+  const btn = document.getElementById('btn-login');
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+
+  // Try Firebase first, fall back to localStorage cache
+  fbGetUser(u).then(function(fbUser) {
+    const userData = fbUser || acctGet()[u];
+    if (!userData) {
+      acErr('Username not found. Please check or create an account.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Sign in'; }
+      return;
+    }
+    if (userData.pass !== h) {
+      acErr('Incorrect password.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Sign in'; }
+      return;
+    }
+    // Cache to localStorage so login works offline next time
+    const cache = acctGet();
+    cache[u] = userData;
+    acctSave(cache);
+    if (btn) { btn.disabled = false; btn.textContent = 'Sign in'; }
+    beginSession(u, userData);
   }).catch(function() {
-    renderAreaLeaderboardEntries(localTotals);
+    // Firebase failed — try localStorage cache
+    const cached = acctGet()[u];
+    if (!cached) { acErr('Cannot reach server and no cached account found. Please check your connection.'); if (btn) { btn.disabled = false; btn.textContent = 'Sign in'; } return; }
+    if (cached.pass !== h) { acErr('Incorrect password.'); if (btn) { btn.disabled = false; btn.textContent = 'Sign in'; } return; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Sign in'; }
+    beginSession(u, cached);
   });
 }
 
-function buildAreaTotals(completionsArray) {
-  // For each area, count total runs completed across all users (deduplicated per user)
-  return AREAS.map(function(area) {
-    var total = 0;
-    var runIds = new Set(area.runs.map(function(r) { return r.id; }));
-    completionsArray.forEach(function(comp) {
-      Object.keys(comp).forEach(function(runId) {
-        if(runIds.has(runId)) total++;
-      });
+// ── Register ───────────────────────────────────────────────
+function doRegister() {
+  const name = (document.getElementById('f-rg-name').value||'').trim();
+  const user = (document.getElementById('f-rg-user').value||'').trim().toLowerCase().replace(/\s+/g,'');
+  const pass = document.getElementById('f-rg-pass').value||'';
+  if (!name) return acErr('Please enter a display name.');
+  if (!user || user.length < 3) return acErr('Username must be at least 3 characters, no spaces.');
+  if (pass.length < 6) return acErr('Password must be at least 6 characters.');
+  let h;
+  try { h = btoa(unescape(encodeURIComponent(pass))); } catch(e) { return acErr('Password contains unsupported characters.'); }
+
+  const btn = document.getElementById('btn-reg');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
+
+  const rec = {
+    name, pass: h, type: _rt,
+    colour: mkColour(name),
+    since:  new Date().toISOString().slice(0,10),
+    snap:   { areas:0, runs:0, badges:0 }
+  };
+
+  // Check Firebase for username clash first, then save
+  fbGetUser(user).then(function(existing) {
+    if (existing) {
+      acErr('That username is taken. Please choose another.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Create account'; }
+      return;
+    }
+    // Save to Firebase
+    return fbSaveUser(user, rec).then(function(ok) {
+      // Also cache locally
+      const a = acctGet();
+      a[user] = rec;
+      acctSave(a);
+      if (btn) { btn.disabled = false; btn.textContent = 'Create account'; }
+      if (!ok) acErr('⚠️ Saved locally only — check your connection. You can still use the app.');
+      beginSession(user, rec);
     });
-    return { area: area, total: total };
-  }).sort(function(a,b) { return b.total - a.total; });
+  }).catch(function() {
+    // Firebase unavailable — save to localStorage only and proceed
+    const a = acctGet();
+    if (a[user]) { acErr('That username is taken locally. Please choose another.'); if (btn) { btn.disabled = false; btn.textContent = 'Create account'; } return; }
+    a[user] = rec;
+    acctSave(a);
+    if (btn) { btn.disabled = false; btn.textContent = 'Create account'; }
+    acErr('⚠️ Saved locally only — Firebase unreachable. Your account works on this device.');
+    beginSession(user, rec);
+  });
 }
 
-function renderAreaLeaderboardEntries(entries) {
-  var container = document.getElementById('area-lb-list');
-  container.innerHTML = '';
+// ── Guest ──────────────────────────────────────────────────
+function doGuest() {
+  CU = null;
+  hideAuth();
+  loadState();
+  refreshPill();
+  document.getElementById('m-explorer').classList.toggle('sel', challengeMode==='explorer');
+  document.getElementById('m-deepdive').classList.toggle('sel', challengeMode==='deepdive');
+  renderAll();
+  populateQuickLog();
+}
 
-  var maxTotal = entries.length ? entries[0].total : 1;
+// ── Begin session (shared by login + register) ─────────────
+function beginSession(username, rec) {
+  CU = { username, name: rec.name, type: rec.type, colour: rec.colour, since: rec.since };
+  profile.name  = rec.name;
+  profile.since = rec.since;
+  if (rec.type === 'adult')  { typeFilter = 'adult';  logTypeFilter = 'adult'; }
+  if (rec.type === 'junior') { typeFilter = 'junior'; logTypeFilter = 'junior'; }
+  hideAuth();
+  userLoad(username);
+  refreshPill();
+  document.getElementById('m-explorer').classList.toggle('sel', challengeMode==='explorer');
+  document.getElementById('m-deepdive').classList.toggle('sel', challengeMode==='deepdive');
+  renderAll();
+  populateQuickLog();
+}
 
-  entries.forEach(function(e, i) {
-    var area  = e.area;
-    var total = e.total;
-    var pct   = maxTotal > 0 ? Math.round(total / maxTotal * 100) : 0;
-    var areaTotal = area.runs.length;
-    // How many distinct runs are possible across all users? Show as % of theoretical max
-    var medal   = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-    var barC    = total===0 ? '#d1d5db' : i===0 ? '#16a34a' : i<3 ? '#0d9488' : '#2563a8';
-    var card = document.createElement('div');
-    card.className = 'area-card';
-    card.style.marginBottom = '6px';
-    card.innerHTML =
-      '<div class="area-hdr" style="cursor:default">'
-      +'<div class="area-icon" style="background:'+area.color+'22">'+area.emoji+'</div>'
-      +'<div class="area-meta">'
-      +'<h4>'+(medal?medal+' ':'')+area.name+'</h4>'
-      +'<p>'+area.region+' · '+areaTotal+' parkruns in area</p>'
-      +'</div>'
-      +'<div class="area-right">'
-      +'<div>'
-      +'<div class="mini-bar" style="width:120px"><div class="mini-fill" style="width:'+pct+'%;background:'+barC+'"></div></div>'
-      +'<div style="margin-top:4px;font-size:11px;color:var(--gray);text-align:right">'
-      +total.toLocaleString()+' total run'+(total!==1?'s':'')+' logged'
-      +'</div></div></div></div>';
-    container.appendChild(card);
-  });
+// ── Sign out ───────────────────────────────────────────────
+function doSignOut() {
+  userSave();
+  CU = null;
+  completions = {}; challengeMode = 'explorer';
+  typeFilter = 'all'; logTypeFilter = 'all';
+  profile = { name:'', area:'', since:'' };
+  closeMenu();
+  refreshPill();
+  showAuth();
+}
 
-  if(!entries.some(function(e){return e.total>0;})) {
-    container.innerHTML = '<div class="empty"><div class="ei">🗺️</div><p>No runs logged yet across any area. Get running!</p></div>';
+// ── User pill + account menu ───────────────────────────────
+function refreshPill() {
+  const pill     = document.getElementById('upill');
+  const guestBtn = document.getElementById('guest-btn');
+  if (CU) {
+    // Signed-in user: show pill, hide guest button
+    pill.style.display = 'flex';
+    if (guestBtn) guestBtn.style.display = 'none';
+    document.getElementById('uav').textContent     = CU.name.charAt(0).toUpperCase();
+    document.getElementById('uav').style.background = CU.colour;
+    document.getElementById('uname').textContent   = CU.name;
+    document.getElementById('am-name').textContent = CU.name;
+    document.getElementById('am-sub').textContent  = '@'+CU.username+' · '+(CU.type==='junior'?'Junior 2K':'Adult 5K');
+  } else {
+    // Guest: hide pill, show sign-in button
+    pill.style.display = 'none';
+    if (guestBtn) guestBtn.style.display = 'flex';
   }
 }
+function toggleMenu() { document.getElementById('amenu').classList.toggle('on'); }
+function closeMenu()  { document.getElementById('amenu').classList.remove('on'); }
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#amenu') && !e.target.closest('#upill')) closeMenu();
+});
 
-// ============================================================
-// PARKRUN LEADERBOARD
-// ============================================================
-var _runLbData = []; // cached full list for client-side search
+// ── Leaderboard (real users) ───────────────────────────────
+let lbF = 'areas';
+function setLbF(f) {
+  lbF = f;
+  ['a','r','b'].forEach(x => {
+    const id = 'lbf-' + (x==='a'?'a':x==='r'?'r':'b');
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('on', (f==='areas'&&x==='a')||(f==='runs'&&x==='r')||(f==='badges'&&x==='b'));
+  });
+  renderLeaderboard();
+}
 
-function renderRunLeaderboard() {
-  var container = document.getElementById('run-lb-list');
-  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:12px">Loading parkrun totals…</div>';
-  _runLbData = [];
+// ── Hook saveState ─────────────────────────────────────────
+// We wrap the call site (scheduleRender/renderAll already call saveState)
+// by monkey-patching after all functions are defined.
+(function() {
+  var _orig = saveState;
+  saveState = function() {
+    if (CU) userSave();
+    else _orig();
+  };
+})();
 
-  // Build from current user's local completions first
-  var localCompletions = [completions];
-  var localData = buildRunTotals(localCompletions);
-  _runLbData = localData;
+// ── Enter key on password fields ───────────────────────────
+(function() {
+  var lp = document.getElementById('f-li-pass');
+  var rp = document.getElementById('f-rg-pass');
+  if (lp) lp.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  if (rp) rp.addEventListener('keydown', function(e){ if(e.key==='Enter') doRegister(); });
+})();
 
-  fbGetAllUserData().then(function(allUserData) {
-    if(allUserData && Object.keys(allUserData).length > 0) {
-      var allCompletions = Object.values(allUserData).map(function(d){ return d.completions || {}; });
-      // Always include current user's live local completions
-      allCompletions.push(completions);
-      _runLbData = buildRunTotals(allCompletions);
-    }
-    
-index.html
-Displaying index.html.
+</script>
+</body>
+</html>
