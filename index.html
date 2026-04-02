@@ -22,7 +22,7 @@ body{font-family:var(--sans);background:var(--bg);color:#111827;min-height:100vh
 header{background:var(--navy);color:#fff}
 .header-inner{max-width:980px;margin:0 auto;padding:20px 16px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:14px}
-.brand-icon{width:48px;heigAht:48px;background:var(--teal);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.brand-icon{width:48px;height:48px;background:var(--teal);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 .brand h1{font-family:var(--serif);font-size:20px;font-weight:400;line-height:1.25}
 .brand h1 span{color:#7dd3fc}
 .brand p{font-size:11px;color:#93c5fd;margin-top:2px}
@@ -347,8 +347,10 @@ main{max-width:980px;margin:0 auto;padding:20px 12px 80px}
     <button class="ntab" onclick="gotoTab('log')">➕ Log a Run</button>
     <button class="ntab" onclick="gotoTab('badges')">🏅 Badges</button>
     <button class="ntab" onclick="gotoTab('stats')">📈 Stats</button>
-    <button class="ntab" onclick="gotoTab('leaderboard')">🏆 Leaderboard</button>
+    <button class="ntab" onclick="gotoTab('leaderboard')">🏆 User Leaderboard</button>
     <button class="ntab" onclick="gotoTab('certificate')">🎖️ Certificate</button>
+    <button class="ntab" onclick="gotoTab('arealeaderboard')">🗺️ Area Leaderboard</button>
+    <button class="ntab" onclick="gotoTab('runleaderboard')">🏃 Parkrun Leaderboard</button>
   </div></div>
 </header>
 
@@ -476,11 +478,12 @@ main{max-width:980px;margin:0 auto;padding:20px 12px 80px}
 
 <!-- LEADERBOARD TAB -->
 <div id="tab-leaderboard" class="hidden">
-  <div class="sec-title">Leaderboard</div>
+  <div class="sec-title">User Leaderboard</div>
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
     <button class="fbtn on" id="lbf-a" onclick="setLbF('areas')">🌍 Areas</button>
     <button class="fbtn"    id="lbf-r" onclick="setLbF('runs')">🏃 Runs</button>
     <button class="fbtn"    id="lbf-b" onclick="setLbF('badges')">🏅 Badges</button>
+    <button class="fbtn"    id="lbf-c" onclick="setLbF('certs')">🎖️ Certificates</button>
     <span id="lb-ct" style="margin-left:auto;font-size:11px;color:var(--gray)"></span>
   </div>
   <div class="card"><div id="lb-list"></div></div>
@@ -521,6 +524,33 @@ main{max-width:980px;margin:0 auto;padding:20px 12px 80px}
       <button class="btn btn-primary" onclick="printCert()">🖨️ Print / Save as PDF</button>
     </div>
   </div>
+</div>
+
+
+<!-- CERTIFICATES LEADERBOARD TAB -->
+<div id="tab-certleaderboard" class="hidden">
+  <div class="sec-title">Certificates Leaderboard</div>
+  <p style="font-size:12px;color:var(--gray);margin-bottom:14px">Ranked by total challenge certificates earned. Each user can earn one Explorer certificate and one Deep Dive certificate per area (up to 21 total).</p>
+  <div class="card">
+    <div id="cert-lb-list"></div>
+  </div>
+</div>
+
+<!-- AREA LEADERBOARD TAB -->
+<div id="tab-arealeaderboard" class="hidden">
+  <div class="sec-title">Area Leaderboard</div>
+  <p style="font-size:12px;color:var(--gray);margin-bottom:14px">All 20 water company areas ranked by total parkrun completions logged by all users combined.</p>
+  <div id="area-lb-list"></div>
+</div>
+
+<!-- PARKRUN LEADERBOARD TAB -->
+<div id="tab-runleaderboard" class="hidden">
+  <div class="sec-title">Parkrun Leaderboard</div>
+  <p style="font-size:12px;color:var(--gray);margin-bottom:10px">All 1,307 parkruns ranked by total completions logged by all users. Search to find a specific parkrun.</p>
+  <div class="search-row" style="margin-bottom:12px">
+    <input type="text" id="run-lb-search" placeholder="Search by parkrun name or location…" oninput="filterRunLeaderboard()" style="flex:1;padding:8px 11px;border-radius:9px;border:1px solid var(--border);font-size:12px;font-family:inherit;outline:none">
+  </div>
+  <div id="run-lb-list"></div>
 </div>
 
 </main>
@@ -626,6 +656,32 @@ async function fbSaveLeaderboardSnap(username, snap) {
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   } catch(e) {}
+}
+
+async function fbSaveCertificate(username, certData) {
+  // certData: { explorer: bool, deepDive: [areaIds] }
+  try {
+    await db.collection('certificates').doc(username).set(certData, { merge: true });
+  } catch(e) {}
+}
+
+async function fbGetAllCertificates() {
+  try {
+    const snap = await db.collection('certificates').get();
+    const result = {};
+    snap.forEach(doc => { result[doc.id] = doc.data(); });
+    return result;
+  } catch(e) { return null; }
+}
+
+async function fbGetAllUserData() {
+  // Fetch all userData docs to aggregate completions by area across all users
+  try {
+    const snap = await db.collection('userData').get();
+    const result = {};
+    snap.forEach(doc => { result[doc.id] = doc.data(); });
+    return result;
+  } catch(e) { return null; }
 }
 
 async function fbGetLeaderboard() {
@@ -741,7 +797,7 @@ function isChallengeDone() {
 // ============================================================
 // TABS
 // ============================================================
-const TABS = ['progress','log','badges','stats','leaderboard','certificate'];
+const TABS = ['progress','log','badges','stats','leaderboard','certificate','arealeaderboard','runleaderboard'];
 function gotoTab(tab) {
   TABS.forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
@@ -750,8 +806,10 @@ function gotoTab(tab) {
   if(tab==='log') { renderLogList(); populateQuickLog(); }
   if(tab==='badges') renderBadges();
   if(tab==='stats') renderStats();
-  if(tab==='leaderboard') renderLeaderboard();
-  if(tab==='certificate') renderCertificate();
+  if(tab==='leaderboard')      renderLeaderboard();
+  if(tab==='certificate')      renderCertificate();
+  if(tab==='arealeaderboard')  renderAreaLeaderboard();
+  if(tab==='runleaderboard')    renderRunLeaderboard();
 }
 
 // ============================================================
@@ -1206,7 +1264,30 @@ function renderCompletionBanner() {
       document.getElementById('comp-title').textContent=`${name} Deep Dive Complete!`;
       document.getElementById('comp-sub').textContent=`Every parkrun in the ${ca?.name||''} area completed!`;
     }
+    // Persist certificate to Firebase so it shows on the Certificates Leaderboard
+    if(CU) saveCertificateToFirebase();
   }
+}
+
+function saveCertificateToFirebase() {
+  if(!CU) return;
+  const certData = { name: CU.name, colour: CU.colour, type: CU.type };
+  if(challengeMode === 'explorer' && AREAS.every(a => a.runs.some(r => completions[r.id]))) {
+    certData.explorer = true;
+    certData.explorerDate = new Date().toISOString().slice(0,10);
+  }
+  if(challengeMode === 'deepdive') {
+    const completedAreas = AREAS
+      .filter(a => { const s = areaStatus(a); return s.total > 0 && s.done === s.total; })
+      .map(a => a.id);
+    if(completedAreas.length) {
+      certData.deepDive = completedAreas;
+      certData.deepDiveDate = new Date().toISOString().slice(0,10);
+    }
+  }
+  // count = 1 for explorer + number of deep-dive areas completed
+  certData.count = (certData.explorer ? 1 : 0) + (certData.deepDive ? certData.deepDive.length : 0);
+  if(certData.count > 0) fbSaveCertificate(CU.username, certData);
 }
 
 // ============================================================
@@ -1245,6 +1326,290 @@ function renderCertificate() {
 }
 
 function printCert() { window.print(); }
+
+// ============================================================
+// CERTIFICATES LEADERBOARD
+// ============================================================
+function renderCertificatesInLeaderboard() {
+  // Renders certificate rankings into the shared lb-list div on the User Leaderboard tab
+  var list = document.getElementById('lb-list');
+  var ct   = document.getElementById('lb-ct');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:12px">Loading…</div>';
+
+  var localCerts = buildLocalCertData();
+
+  fbGetAllCertificates().then(function(fbCerts) {
+    var merged = fbCerts || {};
+    if(CU && localCerts[CU.username]) {
+      merged[CU.username] = Object.assign({}, merged[CU.username]||{}, localCerts[CU.username]);
+    }
+    var entries = buildCertEntries(merged);
+    if(ct) ct.textContent = entries.filter(function(e){return e.count>0;}).length + ' certificate holder' + (entries.filter(function(e){return e.count>0;}).length!==1?'s':'');
+    renderCertLeaderboardEntries(entries, list);
+  }).catch(function() {
+    var entries = buildCertEntries(localCerts);
+    if(ct) ct.textContent = entries.filter(function(e){return e.count>0;}).length + ' certificate holder' + (entries.filter(function(e){return e.count>0;}).length!==1?'s':'');
+    renderCertLeaderboardEntries(entries, list);
+  });
+}
+
+function buildLocalCertData() {
+  var result = {};
+  if(!CU) return result;
+  var count = 0;
+  if(challengeMode==='explorer' && AREAS.every(function(a){return a.runs.some(function(r){return completions[r.id];});})) count++;
+  count += AREAS.filter(function(a){var s=areaStatus(a);return s.total>0&&s.done===s.total;}).length;
+  result[CU.username] = { name:CU.name, colour:CU.colour, type:CU.type, count:count };
+  return result;
+}
+
+function buildCertEntries(certs) {
+  return Object.entries(certs).map(function(kv) {
+    var username = kv[0], d = kv[1];
+    var count = d.count !== undefined ? d.count :
+      (d.explorer ? 1 : 0) + (d.deepDive ? d.deepDive.length : 0);
+    return {
+      username, count,
+      name:   d.name   || username,
+      colour: d.colour || mkColour(d.name||username),
+      type:   d.type   || 'adult',
+      isMe:   CU && username === CU.username
+    };
+  }).filter(function(e){return e.count>0;});
+}
+
+// Keep renderCertLeaderboard as an alias for backwards compat (called nowhere now but harmless)
+function renderCertLeaderboard() {
+  // Stub — the certificates leaderboard is now a sub-tab on User Leaderboard.
+  // This function is kept so any stray calls don't crash the app.
+  renderCertificatesInLeaderboard();
+}
+
+function renderCertLeaderboardEntries(entries, listEl) {
+  // entries: pre-built array of {username, name, colour, type, count, isMe}
+  // listEl: optional DOM element to render into (defaults to cert-lb-list)
+  var list = listEl || document.getElementById('cert-lb-list');
+  if(!list) return;
+  list.innerHTML = '';
+
+  entries.sort(function(a,b) { return b.count - a.count || a.name.localeCompare(b.name); });
+
+  if(!entries.length) {
+    list.innerHTML = '<div class="empty"><div class="ei">🎖️</div><p>No certificates earned yet — complete the Explorer or Deep Dive challenge to appear here!</p></div>';
+    return;
+  }
+
+  entries.forEach(function(p, i) {
+    var medal   = i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
+    var rankCls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    var row = document.createElement('div');
+    row.className = 'lb-item' + (p.isMe?' you-row':'');
+    row.innerHTML =
+      '<div class="lb-rank '+rankCls+'">'+medal+'</div>'
+      +'<div class="lb-avatar" style="background:'+p.colour+';color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">'+p.name.charAt(0).toUpperCase()+'</div>'
+      +'<div class="lb-name">'+p.name+(p.isMe?'<span class="lb-you-tag">you</span>':'')
+      +'<span class="lb-rtype '+p.type+'">'+(p.type==='junior'?'2K Junior':'5K Adult')+'</span>'
+      +'<div class="lb-sub">@'+p.username+'</div></div>'
+      +'<div class="lb-score">'+p.count+' <span>certificate'+(p.count!==1?'s':'')+'</span></div>';
+    list.appendChild(row);
+  });
+}
+
+// ============================================================
+// AREA LEADERBOARD
+// ============================================================
+function renderAreaLeaderboard() {
+  var container = document.getElementById('area-lb-list');
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:12px">Loading area totals…</div>';
+
+  // Start with current user's completions locally
+  var localTotals = buildAreaTotals([completions]);
+
+  fbGetAllUserData().then(function(allUserData) {
+    if(allUserData && Object.keys(allUserData).length > 0) {
+      var allCompletions = Object.values(allUserData).map(function(d) { return d.completions || {}; });
+      // Always include current user's live local completions
+      allCompletions.push(completions);
+      renderAreaLeaderboardEntries(buildAreaTotals(allCompletions));
+    } else {
+      renderAreaLeaderboardEntries(localTotals);
+    }
+  }).catch(function() {
+    renderAreaLeaderboardEntries(localTotals);
+  });
+}
+
+function buildAreaTotals(completionsArray) {
+  // For each area, count total runs completed across all users (deduplicated per user)
+  return AREAS.map(function(area) {
+    var total = 0;
+    var runIds = new Set(area.runs.map(function(r) { return r.id; }));
+    completionsArray.forEach(function(comp) {
+      Object.keys(comp).forEach(function(runId) {
+        if(runIds.has(runId)) total++;
+      });
+    });
+    return { area: area, total: total };
+  }).sort(function(a,b) { return b.total - a.total; });
+}
+
+function renderAreaLeaderboardEntries(entries) {
+  var container = document.getElementById('area-lb-list');
+  container.innerHTML = '';
+
+  var maxTotal = entries.length ? entries[0].total : 1;
+
+  entries.forEach(function(e, i) {
+    var area  = e.area;
+    var total = e.total;
+    var pct   = maxTotal > 0 ? Math.round(total / maxTotal * 100) : 0;
+    var areaTotal = area.runs.length;
+    // How many distinct runs are possible across all users? Show as % of theoretical max
+    var medal   = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    var barC    = total===0 ? '#d1d5db' : i===0 ? '#16a34a' : i<3 ? '#0d9488' : '#2563a8';
+    var card = document.createElement('div');
+    card.className = 'area-card';
+    card.style.marginBottom = '6px';
+    card.innerHTML =
+      '<div class="area-hdr" style="cursor:default">'
+      +'<div class="area-icon" style="background:'+area.color+'22">'+area.emoji+'</div>'
+      +'<div class="area-meta">'
+      +'<h4>'+(medal?medal+' ':'')+area.name+'</h4>'
+      +'<p>'+area.region+' · '+areaTotal+' parkruns in area</p>'
+      +'</div>'
+      +'<div class="area-right">'
+      +'<div>'
+      +'<div class="mini-bar" style="width:120px"><div class="mini-fill" style="width:'+pct+'%;background:'+barC+'"></div></div>'
+      +'<div style="margin-top:4px;font-size:11px;color:var(--gray);text-align:right">'
+      +total.toLocaleString()+' total run'+(total!==1?'s':'')+' logged'
+      +'</div></div></div></div>';
+    container.appendChild(card);
+  });
+
+  if(!entries.some(function(e){return e.total>0;})) {
+    container.innerHTML = '<div class="empty"><div class="ei">🗺️</div><p>No runs logged yet across any area. Get running!</p></div>';
+  }
+}
+
+// ============================================================
+// PARKRUN LEADERBOARD
+// ============================================================
+var _runLbData = []; // cached full list for client-side search
+
+function renderRunLeaderboard() {
+  var container = document.getElementById('run-lb-list');
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:12px">Loading parkrun totals…</div>';
+  _runLbData = [];
+
+  // Build from current user's local completions first
+  var localCompletions = [completions];
+  var localData = buildRunTotals(localCompletions);
+  _runLbData = localData;
+
+  fbGetAllUserData().then(function(allUserData) {
+    if(allUserData && Object.keys(allUserData).length > 0) {
+      var allCompletions = Object.values(allUserData).map(function(d){ return d.completions || {}; });
+      // Always include current user's live local completions
+      allCompletions.push(completions);
+      _runLbData = buildRunTotals(allCompletions);
+    }
+    renderRunLeaderboardEntries(_runLbData);
+  }).catch(function() {
+    renderRunLeaderboardEntries(_runLbData);
+  });
+}
+
+function buildRunTotals(completionsArray) {
+  // Count completions per individual run across all users
+  var counts = {};
+  completionsArray.forEach(function(comp) {
+    Object.keys(comp).forEach(function(runId) {
+      counts[runId] = (counts[runId] || 0) + 1;
+    });
+  });
+  // Build full list — every run, even those with 0 completions
+  var result = [];
+  AREAS.forEach(function(area) {
+    area.runs.forEach(function(run) {
+      result.push({
+        id:       run.id,
+        name:     run.name,
+        loc:      run.loc,
+        areaName: area.name,
+        areaEmoji:area.emoji,
+        type:     run.type,
+        total:    counts[run.id] || 0,
+        doneByMe: !!completions[run.id]
+      });
+    });
+  });
+  result.sort(function(a,b){ return b.total - a.total || a.name.localeCompare(b.name); });
+  return result;
+}
+
+function filterRunLeaderboard() {
+  if(!_runLbData.length) return;
+  var search = (document.getElementById('run-lb-search').value||'').toLowerCase().trim();
+  var filtered = search
+    ? _runLbData.filter(function(r){
+        return r.name.toLowerCase().includes(search) ||
+               r.loc.toLowerCase().includes(search)  ||
+               r.areaName.toLowerCase().includes(search);
+      })
+    : _runLbData;
+  renderRunLeaderboardEntries(filtered);
+}
+
+function renderRunLeaderboardEntries(entries) {
+  var container = document.getElementById('run-lb-list');
+  container.innerHTML = '';
+
+  if(!entries.length) {
+    container.innerHTML = '<div class="empty"><div class="ei">🔍</div><p>No parkruns match your search.</p></div>';
+    return;
+  }
+
+  // Only render top 200 when unfiltered to keep the page fast
+  var search = (document.getElementById('run-lb-search').value||'').trim();
+  var toRender = (!search && entries.length > 200) ? entries.slice(0, 200) : entries;
+  var truncated = (!search && entries.length > 200);
+
+  toRender.forEach(function(r, i) {
+    var medal   = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    var rankNum = i + 1;
+    var barPct  = entries[0].total > 0 ? Math.round(r.total / entries[0].total * 100) : 0;
+    var barC    = r.total===0 ? '#d1d5db' : i===0 ? '#16a34a' : i<3 ? '#0d9488' : '#2563a8';
+    var typeCls = r.type==='Adult' ? 'adult' : 'junior';
+    var typeLabel = r.type==='Adult' ? '5K' : '2K';
+
+    var row = document.createElement('div');
+    row.className = 'run-item';
+    row.style.cssText = 'padding:8px 4px;align-items:center';
+    row.innerHTML =
+      '<div style="width:28px;text-align:center;font-size:12px;font-weight:700;color:var(--gray);flex-shrink:0">'
+      + (medal || rankNum) + '</div>'
+      + '<div style="flex:1;min-width:0;padding:0 8px">'
+      +   '<div style="font-size:12px;font-weight:600;color:var(--blue)">' + (r.doneByMe ? '✓ ' : '') + r.name + '</div>'
+      +   '<div style="font-size:10px;color:var(--gray);margin-top:1px">' + r.areaEmoji + ' ' + r.areaName + ' · 📍 ' + r.loc + '</div>'
+      +   '<div style="height:3px;background:var(--gray-light);border-radius:2px;margin-top:4px;overflow:hidden">'
+      +     '<div style="height:100%;background:' + barC + ';width:' + barPct + '%"></div>'
+      +   '</div>'
+      + '</div>'
+      + '<div style="flex-shrink:0;text-align:right;padding-left:6px">'
+      +   '<span class="run-type ' + typeCls + '">' + typeLabel + '</span>'
+      +   '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-top:3px">' + r.total + '</div>'
+      +   '<div style="font-size:9px;color:var(--gray)">completion' + (r.total!==1?'s':'') + '</div>'
+      + '</div>';
+    container.appendChild(row);
+  });
+
+  if(truncated) {
+    var note = document.createElement('div');
+    note.style.cssText = 'text-align:center;padding:12px;font-size:11px;color:var(--gray)';
+    note.textContent = 'Showing top 200. Search above to find a specific parkrun.';
+    container.appendChild(note);
+  }
+}
 
 // ============================================================
 // PROFILE
@@ -1507,6 +1872,13 @@ function doSignOut() {
   completions = {}; challengeMode = 'explorer';
   typeFilter = 'all'; logTypeFilter = 'all';
   profile = { name:'', area:'', since:'' };
+  // Clear login and registration fields so the previous user's details aren't visible
+  ['f-li-user','f-li-pass','f-rg-name','f-rg-user','f-rg-pass'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // Reset register tab back to login tab
+  acTab('li');
   closeMenu();
   refreshPill();
   showAuth();
@@ -1541,12 +1913,15 @@ document.addEventListener('click', function(e) {
 let lbF = 'areas';
 function setLbF(f) {
   lbF = f;
-  ['a','r','b'].forEach(x => {
-    const id = 'lbf-' + (x==='a'?'a':x==='r'?'r':'b');
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('on', (f==='areas'&&x==='a')||(f==='runs'&&x==='r')||(f==='badges'&&x==='b'));
-  });
-  renderLeaderboard();
+  document.getElementById('lbf-a').classList.toggle('on', f==='areas');
+  document.getElementById('lbf-r').classList.toggle('on', f==='runs');
+  document.getElementById('lbf-b').classList.toggle('on', f==='badges');
+  document.getElementById('lbf-c').classList.toggle('on', f==='certs');
+  if(f === 'certs') {
+    renderCertificatesInLeaderboard();
+  } else {
+    renderLeaderboard();
+  }
 }
 
 // ── Hook saveState ─────────────────────────────────────────
